@@ -32,7 +32,7 @@ template <class T>
 auto iota(T from, T to) {
   auto begin = detail::IotaIterator(from);
   auto end = detail::IotaIterator(to);
-  return detail::IteratorRange(begin, end);
+  return IteratorRange(begin, end);
 }
 
 template <class T> 

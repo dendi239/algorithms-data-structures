@@ -1,3 +1,5 @@
+#pragma once
+
 template <class concrete>
 struct ContainerAdapter {
   template <class Container>
@@ -18,7 +20,7 @@ auto operator|(
   return adapter(container);
 }
 
-template <class Adapter, class Container> 
+template <class Adapter, class Container>
 auto operator|(
   Container &container,
   const ContainerAdapter<Adapter> &adapter) {
