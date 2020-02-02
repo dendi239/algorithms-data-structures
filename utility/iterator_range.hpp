@@ -1,7 +1,5 @@
 template <class Iterator>
 class IteratorRange {
-    Iterator begin_, end_;
-
 public:
     IteratorRange(Iterator begin, Iterator end) : begin_{std::move(begin)}, end_{std::move(end)} {
         // no-op
@@ -20,4 +18,7 @@ public:
     auto end() const {
         return end_;
     }
+
+private:
+    Iterator begin_, end_;
 };
