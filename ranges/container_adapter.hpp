@@ -1,15 +1,15 @@
 #pragma once
 
-template <class concrete>
+template <class ConcreteAdapter>
 struct ContainerAdapter {
   template <class Container>
   auto operator()(const Container &container) const {
-    return static_cast<const concrete &>(*this)(container);
+    return static_cast<const ConcreteAdapter &>(*this)(container);
   }
 
   template <class Container>
   auto operator()(Container &container) const {
-    return static_cast<const concrete &>(*this)(container);
+    return static_cast<const ConcreteAdapter &>(*this)(container);
   }
 };
 
