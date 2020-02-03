@@ -17,7 +17,7 @@ struct FilterIteratorAdapter {
     return *this;
   }
 
-  auto operator*() const {
+  auto &operator*() const {
     return *it_;
   }
 
