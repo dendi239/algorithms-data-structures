@@ -2,9 +2,9 @@
 
 template <class Concrete>
 struct DfsVisitor {
-  void StartVertex(Node node);
-  void DiscoverVertex(Node node);
-  void FinishVertex(Node node);
+  void StartVertex(Graph::Node node);
+  void DiscoverVertex(Graph::Node node);
+  void FinishVertex(Graph::Node node);
 
   template <class GraphType = Graph>
   void Visit(const GraphType &graph);
@@ -108,31 +108,30 @@ class Dfs {
 };
 
 template <class GraphType, class Visitor, class It>
-void TraverseGraphInDfsOrder(const GraphType &graph, It begin, It end,
-                             Visitor visitor) {
+void DepthFirstSearch(const GraphType &graph, It begin, It end,
+                      Visitor visitor) {
   Dfs<GraphType, Visitor>{graph, std::move(visitor)}.PerformTraverse(begin,
                                                                      end);
 }
 
 template <class GraphType, class Visitor>
-void TraverseGraphInDfsOrder(const GraphType &graph, Visitor visitor) {
+void DepthFirstSearch(const GraphType &graph, Visitor visitor) {
   std::vector<Node> standard_order(graph.Size());
   std::iota(standard_order.begin(), standard_order.end(), 0);
-  return TraverseGraphInDfsOrder(graph, standard_order.begin(),
-                                 standard_order.end(), visitor);
+  return DepthFirstSearch(graph, standard_order.begin(), standard_order.end(),
+                          visitor);
 }
 
 template <class Concrete>
 template <class GraphType>
 void DfsVisitor<Concrete>::Visit(const GraphType &graph) {
-  return TraverseGraphInDfsOrder(graph, *static_cast<Concrete *>(this));
+  return DepthFirstSearch(graph, *static_cast<Concrete *>(this));
 }
 
 template <class Concrete>
 template <class GraphType, class It>
 void DfsVisitor<Concrete>::Visit(const GraphType &graph, It begin, It end) {
-  return TraverseGraphInDfsOrder(graph, begin, end,
-                                 *static_cast<Concrete *>(this));
+  return DepthFirstSearch(graph, begin, end, *static_cast<Concrete *>(this));
 }
 
 template <class Concrete>
@@ -142,16 +141,16 @@ void DfsVisitor<Concrete>::Visit(const GraphType &graph, Container order) {
 }
 
 template <class Concrete>
-void DfsVisitor<Concrete>::StartVertex(Node node) {
+void DfsVisitor<Concrete>::StartVertex(Graph::Node node) {
   static_cast<Concrete *>(this)->StartVertex(node);
 }
 
 template <class Concrete>
-void DfsVisitor<Concrete>::DiscoverVertex(Node node) {
+void DfsVisitor<Concrete>::DiscoverVertex(Graph::Node node) {
   static_cast<Concrete *>(this)->DiscoverVertex(node);
 }
 
 template <class Concrete>
-void DfsVisitor<Concrete>::FinishVertex(Node node) {
+void DfsVisitor<Concrete>::FinishVertex(Graph::Node node) {
   static_cast<Concrete *>(this)->FinishVertex(node);
 }
