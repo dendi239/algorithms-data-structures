@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <utility>
 
 template <int64_t mod>
@@ -25,6 +26,19 @@ public:
 
     bool operator<(const Z &other) const;
 };
+
+template <int64_t mod> 
+std::istream &operator>>(std::istream &is, Z<mod> &z) {
+    int64_t value;
+    is >> value;
+    z = Z<mod>(value);
+    return is;
+}
+
+template <int64_t mod>
+std::ostream &operator<<(std::ostream &os, const Z<mod> &z) {
+    return os << static_cast<int>(z);
+}
 
 template <int64_t mod>
 bool Z<mod>::operator<(const Z<mod> &rhs) const {
