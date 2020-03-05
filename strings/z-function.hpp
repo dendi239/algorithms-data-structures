@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <string>
 #include <vector>
 
@@ -13,7 +14,7 @@ auto z_function(const std::string &text) -> std::vector<int> {
       finish = std::min(finish, end);
     }
 
-    for (; finish < text.size(); ++finish) {
+    for (; finish < static_cast<int>(text.size()); ++finish) {
       if (text[finish] != text[finish - index]) {
         break;
       }
