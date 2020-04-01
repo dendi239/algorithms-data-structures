@@ -11,7 +11,7 @@ struct IotaIterator {
 
   IotaIterator &operator++() {
     ++value_;
-    return *this;  
+    return *this;
   }
 
   const T &operator*() const {
@@ -22,7 +22,7 @@ struct IotaIterator {
     return value_ != rhs.value_;
   }
 
-private:
+ private:
   T value_;
 };
 
@@ -35,7 +35,7 @@ auto iota(T from, T to) {
   return IteratorRange(begin, end);
 }
 
-template <class T> 
+template <class T>
 auto iota(T to) {
   return iota(T(), to);
 }
