@@ -2,7 +2,8 @@
 #include <string>
 #include <vector>
 
-auto z_function(const std::string &text) -> std::vector<int> {
+template <class Str>
+auto z_function(const Str &text) -> std::vector<int> {
   std::vector<int> values(text.size());
   int start = 0, end = 0;
 
