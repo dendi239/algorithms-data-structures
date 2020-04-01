@@ -5,11 +5,10 @@
 
 template <int64_t mod>
 class Z {
-  int value_;
-
  public:
-  explicit Z(int64_t value = 0) : value_(value % mod) {}
+  Z(int64_t value = 0, int = 0) : value_(value % mod) {}
   explicit operator int() const { return (value_ + mod) % mod; }
+  explicit operator int64_t() const { return (value_ + mod) % mod; }
 
   Z Inverse() const;
 
@@ -22,6 +21,9 @@ class Z {
   bool operator!=(const Z &other) const;
 
   bool operator<(const Z &other) const;
+
+ private:
+  int64_t value_;
 };
 
 template <int64_t mod>
@@ -34,7 +36,7 @@ std::istream &operator>>(std::istream &is, Z<mod> &z) {
 
 template <int64_t mod>
 std::ostream &operator<<(std::ostream &os, const Z<mod> &z) {
-  return os << static_cast<int>(z);
+  return os << static_cast<int64_t>(z);
 }
 
 template <int64_t mod>
@@ -77,24 +79,21 @@ Z<mod> Z<mod>::Inverse() const {
 template <int64_t mod>
 Z<mod> &Z<mod>::operator+=(const Z &other) {
   value_ += other.value_;
-  if (value_ >= mod) {
-    value_ -= mod;
-  }
+  value_ %= mod;
   return *this;
 }
 
 template <int64_t mod>
 Z<mod> &Z<mod>::operator-=(const Z &other) {
   value_ -= other.value_;
-  if (value_ <= -mod) {
-    value_ -= mod;
-  }
+  value_ %= mod;
   return *this;
 }
 
 template <int64_t mod>
 Z<mod> &Z<mod>::operator*=(const Z &other) {
-  value_ = static_cast<int64_t>(value_) * other.value_ % mod;
+  value_ *= other.value_;
+  value_ %= mod;
   return *this;
 }
 
