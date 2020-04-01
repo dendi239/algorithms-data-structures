@@ -2,29 +2,12 @@
 
 #include <algorithm>
 #include <array>
+#include <map>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-template <typename K, typename V>
-struct CheapMap {
-  static constexpr K kMinValue = 'a';
-  static constexpr K kMaxValue = 'z';
-  static constexpr V kDefaultValue = -1;
-
-  CheapMap() {
-    std::fill(data_.begin(), data_.end(), kDefaultValue);
-  }
-
-  bool count(K key) const { return data_[key - kMinValue] != kDefaultValue; }
-  V at(K key) const { return data_[key - kMinValue]; }
-  V &operator[](K key) { return data_[key - kMinValue]; }
-
- private:
-  std::array<V, kMaxValue - kMinValue + 1> data_;
-};
 
 class Ukkonen {
  public:
@@ -35,13 +18,13 @@ class Ukkonen {
     }
   }
 
-  bool Contains(std::string_view string_view) const;
-  void Append(char ch);
-
   struct Position {
     int from, to;
     int shift;
   };
+
+  bool Contains(std::string_view string_view) const;
+  void Append(char ch);
 
   static Position Root() { return Position{0, 0, 0}; }
 
@@ -53,9 +36,10 @@ class Ukkonen {
   struct Node {
     int start = 0, shift = inf;
     int suff_link = 0;
-    CheapMap<char, int> next;
+    std::map<char, int> next;
   };
 
+  friend struct UkkonenIntersector;
   friend auto GetTarget(const Ukkonen &, Link) -> Position;
   friend auto OutgoingEdges(const Ukkonen &, Position) -> std::vector<Link>;
 
@@ -64,6 +48,8 @@ class Ukkonen {
 
   Position suff_link(Position pos) const;
   auto split_create(Position pos, char ch) -> std::pair<int, int>;
+  int Split(Position pos);
+
 
 #ifdef LOG_TREE
 
@@ -127,6 +113,22 @@ auto Ukkonen::suff_link(Ukkonen::Position pos) const -> Position {
   return Position{node, next_node, shift};
 }
 
+int Ukkonen::Split(Position pos) {
+  int new_id = static_cast<int>(tree_.size());
+  const int start = tree_[pos.to].start;
+  const char current = text_[start + pos.shift];
+
+  Node new_node{tree_[pos.to].start, pos.shift, 0};
+  new_node.next[current] = pos.to;
+  tree_.push_back(new_node);
+
+  tree_[pos.from].next[text_[start]] = new_id;
+  tree_[pos.to].start += pos.shift;
+  if (tree_[pos.to].shift != inf) tree_[pos.to].shift -= pos.shift;
+
+  return new_id;
+}
+
 std::pair<int, int> Ukkonen::split_create(Position pos, char ch) {
   auto add_link = [&](int node) {
     int new_id = static_cast<int>(tree_.size());
@@ -136,23 +138,14 @@ std::pair<int, int> Ukkonen::split_create(Position pos, char ch) {
     return new_id;
   };
 
+  int id;
   if (pos.shift < tree_[pos.to].shift) {
-    int new_id = static_cast<int>(tree_.size());
-    const int start = tree_[pos.to].start;
-    const char current = text_[start + pos.shift];
-
-    Node new_node{tree_[pos.to].start, pos.shift, 0};
-    new_node.next[current] = pos.to;
-    tree_.push_back(new_node);
-
-    tree_[pos.from].next[text_[start]] = new_id;
-    tree_[pos.to].start += pos.shift;
-    if (tree_[pos.to].shift != inf) tree_[pos.to].shift -= pos.shift;
-
-    return {new_id, add_link(new_id)};
+    id = Split(pos);
   } else {
-    return {pos.to, add_link(pos.to)};
+    id = pos.to;
   }
+
+  return {id, add_link(id)};
 }
 
 auto Ukkonen::go(Position pos, char ch) const -> Position {
@@ -221,7 +214,7 @@ namespace std {
 template <>
 struct hash<Ukkonen::Position> {
   size_t operator()(Ukkonen::Position position) const noexcept {
-    return (static_cast<size_t>(position.to) << 30Ка) ^
+    return (static_cast<size_t>(position.to) << 30) ^
            (static_cast<size_t>(position.shift));
   }
 };
@@ -244,10 +237,9 @@ std::vector<Ukkonen::Link> OutgoingEdges(
   } else {
     std::vector<Ukkonen::Link> links;
     auto &storage = ukkonen.tree_[position.to].next;
-    for (char symb = CheapMap<char, int>::kMinValue;
-         symb <= CheapMap<char, int>::kMaxValue; ++symb) {
+    for (auto [symb, next_node] : storage) {
       if (!storage.count(symb)) continue;
-      links.emplace_back(symb, Ukkonen::Position{position.to, storage.at(symb), 1});
+      links.emplace_back(symb, Ukkonen::Position{position.to, next_node, 1});
     }
     return links;
   }
