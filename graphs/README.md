@@ -58,7 +58,7 @@ Along with examples.
 
 TODO List for algorithms:
 - [X] DFS
-    - [ ] Finding strongly-connected-component
+    - [X] Finding strongly-connected-component
     - [ ] Topological sort
     - [ ] Finding bridges
     - [x] Condensation
