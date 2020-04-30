@@ -50,10 +50,9 @@ void FFT(It begin, It end, T base) {
 
     for (int start = 0; start < size; start += 2 * bit) {
       T pow = 1;
-      for (int index = start; index < start + bit; ++index) {
+      for (int index = start; index < start + bit; ++index, pow *= mult) {
         T lhs = *(begin + index), rhs = *(begin + index + bit) * pow;
         *(begin + index) = lhs + rhs, *(begin + index + bit) = lhs - rhs;
-        pow *= mult;
       }
     }
   }
