@@ -2,6 +2,10 @@
 
 #include <functional>
 
+#include <graphs/dfs.hpp>
+
+namespace traverses {
+
 class LambdaVisitor {
  public:
   LambdaVisitor() = default;
@@ -13,18 +17,18 @@ class LambdaVisitor {
   void DiscoverVertex(int node) const;
   void FinishVertex(int node) const;
 
-  template <class StartFunction>
+  template<class StartFunction>
   LambdaVisitor OnStart(StartFunction start_function);
-  template <class DiscoverFunction>
+  template<class DiscoverFunction>
   LambdaVisitor OnDiscover(DiscoverFunction discover_function);
-  template <class FinishFunction>
+  template<class FinishFunction>
   LambdaVisitor OnFinish(FinishFunction finish_function);
 
-  template <class Graph>
+  template<class Graph>
   void Visit(const Graph &graph) const;
-  template <class Graph, class Order>
+  template<class Graph, class Order>
   void Visit(const Graph &graph, const Order &order) const;
-  template <class Graph, class It>
+  template<class Graph, class It>
   void Visit(const Graph &graph, It begin, It end) const;
 
  private:
@@ -33,18 +37,22 @@ class LambdaVisitor {
   std::function<void(int)> on_finish_;
 };
 
+template<class Graph>
+void LambdaVisitor::Visit(const Graph &graph) const {
+  traverses::DepthFirstSearch(graph, *this);
+}
 
-template <class Graph, class It>
+template<class Graph, class It>
 void LambdaVisitor::Visit(const Graph &graph, It begin, It end) const {
-  TraverseGraphInDfsOrder(graph, begin, end, *this);
+  DepthFirstSearch(graph, begin, end, *this);
 }
 
-template <class Graph, class Order>
+template<class Graph, class Order>
 void LambdaVisitor::Visit(const Graph &graph, const Order &order) const {
-  TraverseGraphInDfsOrder(graph, order.begin(), order.end(), *this);
+  DepthFirstSearch(graph, order.begin(), order.end(), *this);
 }
 
-template <class StartFunction>
+template<class StartFunction>
 LambdaVisitor LambdaVisitor::OnStart(StartFunction start_function) {
   return LambdaVisitor{
       std::function<void(int)>(start_function),
@@ -53,7 +61,7 @@ LambdaVisitor LambdaVisitor::OnStart(StartFunction start_function) {
   };
 }
 
-template <class DiscoverFunction>
+template<class DiscoverFunction>
 LambdaVisitor LambdaVisitor::OnDiscover(DiscoverFunction discover_function) {
   return LambdaVisitor{
       on_start_,
@@ -62,7 +70,7 @@ LambdaVisitor LambdaVisitor::OnDiscover(DiscoverFunction discover_function) {
   };
 }
 
-template <class FinishFunction>
+template<class FinishFunction>
 LambdaVisitor LambdaVisitor::OnFinish(FinishFunction finish_function) {
   return LambdaVisitor{
       on_start_,
@@ -95,3 +103,5 @@ LambdaVisitor::LambdaVisitor(std::function<void(int)> on_start,
     : on_start_{on_start}, on_discover_{on_discover}, on_finish_{on_finish} {
   // no-op
 }
+
+}  // namespace traverses

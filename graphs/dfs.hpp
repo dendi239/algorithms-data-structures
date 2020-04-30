@@ -1,8 +1,13 @@
+#pragma once
+
 #include <numeric>
 #include <stack>
 #include <vector>
 
 namespace traverses {
+
+template <class Graph, class Visitor, class NodeType>
+void DepthFirstSearch(const Graph &graph, Visitor visitor, NodeType start);
 
 template<class Graph, class Visitor, class It>
 void DepthFirstSearch(const Graph &graph, It begin, It end, Visitor visitor);
@@ -16,12 +21,14 @@ template<class Graph, class Visitor>
 class Dfs {
  public:
   explicit Dfs(const Graph &graph, Visitor visitor)
-      : graph_{graph}, statuses_(graph.Size()), visitor_{std::move(visitor)} {
-  }
+      : graph_{graph}
+      , statuses_(NumberVertices(graph))
+      , visitor_{std::move(visitor)}
+  {}
 
-  void Visit(int node) {
+  void Visit(int start) {
     std::stack<int> nodes;
-    nodes.push(node);
+    nodes.push(start);
 
     while (!nodes.empty()) {
       auto node = nodes.top();
@@ -31,6 +38,7 @@ class Dfs {
         visitor_.FinishVertex(node);
         continue;
       }
+
       if (statuses_[node] == Status::LOOKED) {
         nodes.pop();
         continue;
@@ -73,6 +81,12 @@ class Dfs {
 
 }  // namespace detail
 
+template <class Graph, class Visitor, class NodeType>
+void DepthFirstSearch(const Graph &graph, Visitor visitor, NodeType start) {
+  detail::Dfs<Graph, Visitor>{graph, std::move(visitor)}
+    .Visit(start);
+}
+
 template<class Graph, class Visitor, class It>
 void DepthFirstSearch(const Graph &graph, It begin, It end, Visitor visitor) {
   detail::Dfs<Graph, Visitor>{graph, std::move(visitor)}
@@ -81,7 +95,7 @@ void DepthFirstSearch(const Graph &graph, It begin, It end, Visitor visitor) {
 
 template<class Graph, class Visitor>
 void DepthFirstSearch(const Graph &graph, Visitor visitor) {
-  std::vector<int> standard_order(graph.Size());
+  std::vector<int> standard_order(graph.size());
   std::iota(standard_order.begin(), standard_order.end(), 0);
   return DepthFirstSearch(graph, standard_order.begin(), standard_order.end(), visitor);
 }
