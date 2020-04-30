@@ -1,10 +1,11 @@
 # Algorithms and Data structures
 
 This is a library of algorithms and data structures frequently used in 
-different competitive programming problems. It follows DRY principle to reduce 
-the amount of time spent on writing already known solutions and concentrate on new ones.
+different competitive programming problems. It follows DRY principle 
+to reduce the amount of time spent on writing already known solutions 
+and concentrate on new ones.
 
-It's divided into few subfolders:
+It's divided into a few subfolders:
 
 ### Algebra 
 
