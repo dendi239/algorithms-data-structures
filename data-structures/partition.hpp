@@ -14,8 +14,10 @@ class Partition {
  private:
   friend class PartitionBuilder;
 
-  explicit Partition(std::vector<std::vector<int>> components, std::vector<size_t> component_by_node)
-      : components_{std::move(components)}, component_by_node_{std::move(component_by_node)}
+  explicit Partition(std::vector<std::vector<int>> components,
+                     std::vector<size_t> component_by_node)
+      : components_{std::move(components)}
+      , component_by_node_{std::move(component_by_node)}
   {}
 
   std::vector<std::vector<int>> components_;
