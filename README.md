@@ -14,8 +14,9 @@ counting Cs and that's all for now.
 
 ### Data Structures 
 
-All necessary data structures such as RMQ, DSU, or Partition
-used in Condensation algorithm are concentrated here. It's planned to add SegmentTree or Treap as well, 
+All necessary data structures such as RMQ, DSU,
+or Partition used in Condensation algorithm are concentrated here.
+It's planned to add SegmentTree or Treap as well, 
 but it has more detailed design to develop at first.
 
 ### Graphs 
