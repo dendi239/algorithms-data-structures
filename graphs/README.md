@@ -28,6 +28,7 @@ in order to achieve all profit present graph micro-library could provide.
 Hence, we need or graph to define somehow two types `NodeType` , `EdgeType` 
 such that following functions are available:
 ```c++
+int NumberVertices(const Graph &graph);
 auto GetTarget(const Graph &graph, const EdgeType &edge) -> NodeType;
 auto OutgoingEdges(const Graph &graph, NodeType node) -> Edges;
 ```

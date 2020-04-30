@@ -60,12 +60,17 @@ class SuffAutomaton {
   friend struct SuffAutomatonIntersector;
   friend struct MaxStringFinder;
 
+  friend int NumberVertices(const SuffAutomaton &automaton);
   friend int GetTarget(const SuffAutomaton &automaton, std::pair<char, int> edge);
   friend const auto &OutgoingEdges(const SuffAutomaton &automaton, int node);
 
   std::vector<Node> nodes;
   int last;
 };
+
+int NumberVertices(const SuffAutomaton &automaton) {
+  return automaton.nodes.size();
+}
 
 int GetTarget(const SuffAutomaton &automaton, std::pair<char, int> edge) {
   return edge.second;
