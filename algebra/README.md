@@ -3,7 +3,7 @@
 ## class `Z<mod>`
 
 Class `Z<mod>` incapsulates residue by given modulo. 
-It supports any modulo you providde, but if you need to divide reisudes one by another, you'll need to ensure that `gcd(modulo, denominator) = 1`.
+It supports any modulo you provide, but if you need to divide reisudes one by another, you'll need to ensure that `gcd(modulo, denominator) = 1`.
 
 Currently supported: 
 - constructor, `operator int`
