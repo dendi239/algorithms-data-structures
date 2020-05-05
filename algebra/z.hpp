@@ -2,11 +2,14 @@
 
 #include <iostream>
 #include <utility>
+#include <type_traits>
 
 template <int64_t mod>
 class Z {
  public:
-  template <class Int = int>
+  template <
+      class Int = int,
+      class = typename std::enable_if<std::is_integral<Int>::value>::type>
   Z(Int value = 0, int = 0) : value_(value % mod) {}
   explicit operator int() const { return (value_ + mod) % mod; }
   explicit operator int64_t() const { return (value_ + mod) % mod; }
