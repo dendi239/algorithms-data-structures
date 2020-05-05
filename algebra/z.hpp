@@ -11,8 +11,11 @@ class Z {
       class Int = int,
       class = typename std::enable_if<std::is_integral<Int>::value>::type>
   Z(Int value = 0, int = 0) : value_(value % mod) {}
-  explicit operator int() const { return (value_ + mod) % mod; }
-  explicit operator int64_t() const { return (value_ + mod) % mod; }
+
+  template <
+      class Int = int,
+      class = typename std::enable_if<std::is_integral<Int>::value>::type>
+  explicit operator Int() const { return (value_ + mod) % mod; }
 
   Z Inverse() const;
 
