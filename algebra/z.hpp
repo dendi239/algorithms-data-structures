@@ -30,7 +30,7 @@ class Z {
   bool operator<(const Z &other) const;
 
  private:
-  int64_t value_;
+  int value_;
 };
 
 template <int64_t mod>
@@ -86,21 +86,22 @@ Z<mod> Z<mod>::Inverse() const {
 template <int64_t mod>
 Z<mod> &Z<mod>::operator+=(const Z &other) {
   value_ += other.value_;
-  value_ %= mod;
+  if (value_ >= +mod) value_ -= mod;
+  if (value_ <= -mod) value_ += mod;
   return *this;
 }
 
 template <int64_t mod>
 Z<mod> &Z<mod>::operator-=(const Z &other) {
   value_ -= other.value_;
-  value_ %= mod;
+  if (value_ >= +mod) value_ -= mod;
+  if (value_ <= -mod) value_ += mod;
   return *this;
 }
 
 template <int64_t mod>
 Z<mod> &Z<mod>::operator*=(const Z &other) {
-  value_ *= other.value_;
-  value_ %= mod;
+  value_ = static_cast<int64_t>(value_) * other.value_ % mod;
   return *this;
 }
 
