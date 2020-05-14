@@ -37,3 +37,6 @@ Float operator-(const Float &lhs, const Float &rhs) { return Float(lhs) -= rhs; 
 Float operator*(const Float &lhs, const Float &rhs) { return Float(lhs) *= rhs; }
 Float operator/(const Float &lhs, const Float &rhs) { return Float(lhs) /= rhs; }
 
+Float operator""_f(long double value) {
+ return Float(value); 
+}
