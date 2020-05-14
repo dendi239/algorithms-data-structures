@@ -17,6 +17,9 @@ class Z {
       class = typename std::enable_if<std::is_integral<Int>::value>::type>
   explicit operator Int() const { return (value_ + mod) % mod; }
 
+  friend Z operator""_z(unsigned long long value)
+  { return Z(value); }
+
   Z Inverse() const;
 
   Z &operator+=(const Z &other);
@@ -70,7 +73,8 @@ std::pair<int64_t, int64_t> LrpGcd(int64_t first, int64_t second) {
     }
   }
 
-  auto [prev_first_coeff, prev_second_coeff] = LrpGcd(second, first % second);
+  int64_t prev_first_coeff, prev_second_coeff;
+  std::tie(prev_first_coeff, prev_second_coeff) = LrpGcd(second, first % second);
   return {
       prev_second_coeff,
       prev_first_coeff - (first / second) * prev_second_coeff,

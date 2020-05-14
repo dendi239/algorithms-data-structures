@@ -52,9 +52,9 @@ constexpr int mod = 1'000'000'007;
 
 using Mint = Z<mod>;
 
-Mint operator""_z(unsigned long long number) {
-	return Mint(number);
-}
+// Needs only declaration to work -- definition's 
+// provided by `class Z<mod>`
+Mint operator""_z(unsigned long long number);
 ```
 
 
