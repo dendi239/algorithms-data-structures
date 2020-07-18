@@ -34,30 +34,38 @@ Counts all necessary cs with given size. Stores factorials and performs exactly 
 
 
 
-## `class Z<mod>`
+## `class Modular<Modulo>`
 
-Class `Z<mod>` incapsulates residue by given modulo. 
-It supports any modulo you provide, but if you need to divide reisudes one by another, you'll need to ensure that `gcd(modulo, denominator) = 1`.
-
-Currently supported: 
-- constructor, `operator int`
-- `operator+=`, `-=`, `*=`, `/=`, `==`, `!=`, `<`
-
-So you can operate with `Z`s like any other numbers without need to worry about performing operations by modulo at any specific point.
-
-Few tricks to use:
-
-```cpp
-constexpr int mod = 1'000'000'007;
-
-using Mint = Z<mod>;
-
-// Needs only declaration to work -- definition's 
-// provided by `class Z<mod>`
-Mint operator""_z(unsigned long long number);
+Class [`Modular<Modulo>`](modular.hpp) incapsulates residue by given modulo. 
+Works fine with all operators you might need, moreover you're allowed to pass any `Modulo` you might need work with.
+If you need to work with `operator/` you might need to implement `is_invertible` trait:
+```c++
+struct is_invertible<YourModulo> {
+  static bool value = true;
+  
+  // Type there is `std::remove_cv_t<decltype(YourModulo::value)>
+  static Type inverse(Type number) {
+    // your implementation goes here
+  }
+};
 ```
 
+Currently supported: 
+- constructor, `operator Type`
+- `operator+=`, `-=`, `*=`, `/=`, `==`, `!=`, `<`, `++`, `--`
+- `operator>>` for `istream` and `operator<<` for `ostream`
 
+So you can operate with `Modulars`s like any other numbers without need to worry about performing operations by modulo at any specific point.
+However, it might be annoying to provide single class to work with it. 
+So, there're two concrete classes with useful type-aliases, take a look:
+
+```c++
+using Mint = Z<1'000'000'009>;
+// deal with Mint as ints at this point
+
+using Mint = DynamicModular<int64_t>;
+// fill Mint::Modulo::value somehow before use -- by default it equals 0 
+```
 
 ## `class Float`
 
