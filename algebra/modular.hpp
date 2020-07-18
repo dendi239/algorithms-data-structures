@@ -1,4 +1,3 @@
-// MIT License
 //
 // Copyright (c) 2020 Denys Smirnov
 //
@@ -19,6 +18,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+//
 
 #pragma once
 
@@ -82,7 +82,7 @@ class Modular {
   }
 
  private:
-  Type Mod() const { return Modulo::value; }
+  static Type Mod() { return Modulo::value; }
 
   Z &Normalize() {
     value_ %= Mod();
