@@ -1,5 +1,3 @@
-# **Algorithms and Data structures**
-
 This is a library of algorithms and data structures frequently used in 
 different competitive programming problems. It follows DRY principle 
 to reduce the amount of time spent on writing already known solutions 
