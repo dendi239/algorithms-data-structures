@@ -7,6 +7,8 @@ find_package(Catch2 REQUIRED)
 link_libraries(Catch2::Catch2)
 
 add_executable(modular-test tests/modular-test.cc)
+add_executable(stree-test tests/stree-test.cc)
 
 enable_testing()
 add_test(modular modular-test)
+add_test(stree stree-test)
