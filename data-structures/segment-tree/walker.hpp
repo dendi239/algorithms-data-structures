@@ -56,7 +56,7 @@ class Walker {
 };
 
 template <class T>
-struct RangeQuery : T {
+struct RangeQuery {
   int begin, end;
 
   template <class Walker>

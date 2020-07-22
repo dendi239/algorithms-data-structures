@@ -58,9 +58,9 @@ class STree {
       .build(Root());
   }
 
-  template<class T = typename Storage::Monoid, class ...Args>
-  auto Fold(int begin, int end, Args &&...args) {
-    return RangeQuery<T>{T{args...}, begin, end}
+  template<class T = typename Storage::Monoid>
+  auto Fold(int begin, int end) {
+    return RangeQuery<T>{begin, end}
         .perform(Root());
   }
 
