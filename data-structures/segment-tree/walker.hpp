@@ -26,9 +26,14 @@ template <class NodeReference>
 class Walker {
  public:
   using Data = typename NodeReference::Data;
+  using Monoid = typename NodeReference::Monoid;
 
   NodeReference node;
   int left, right;
+
+  Walker() = default;
+  Walker(NodeReference node, int left, int right)
+      : node(node), left(left), right(right) {}
 
   int mid() const { return (left + right) / 2; }
   int size() const { return right - left; }
@@ -46,23 +51,34 @@ class Walker {
 
   Data &Get() { return node.Get(); }
   Data &Update() {
-    return node.Get() = Data::Merge(Left().Get(), Right().Get());
+    return node.Get() = Monoid::Merge(Left().Get(), Right().Get());
   }
 };
 
-template<class Storage>
-class STree {
- public:
-  explicit STree(int size) : begin_{0}, end_{size} {}
+template <class T>
+struct RangeQuery : T {
+  int begin, end;
 
-  Walker<typename Storage::NodeReference> Root() {
-    return Walker<typename Storage::NodeReference>{
-      storage_.Root(),
-      begin_, end_,
-    };
+  template <class Walker>
+  auto perform(Walker walker) {
+    if (walker.inside(begin, end)) {
+      return T::Pure(walker.Get());
+    }
+
+    auto left = walker.Left();
+    auto right = walker.Right();
+
+    auto result = [&] {
+      if (left.disjoint(begin, end)) {
+        return perform(right);
+      }
+      if (right.disjoint(begin, end)) {
+        return perform(left);
+      }
+      return T::Merge(perform(left), perform(right));
+    }();
+
+    walker.Update();
+    return result;
   }
-
- private:
-  Storage storage_;
-  int begin_, end_;
 };

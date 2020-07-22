@@ -23,79 +23,114 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch.hpp>
 
-#include "../data-structures/node-storage.hpp"
-#include "../data-structures/walker.hpp"
+#include "../data-structures/segment-tree/segment-tree.hpp"
 
 struct SumData {
-  int sum = 0;
+  static auto Pure(int64_t value) {
+    return value;
+  }
 
-  static SumData Merge(SumData lhs, SumData rhs) {
-    return {lhs.sum + rhs.sum};
+  static auto Merge(int64_t lhs, int64_t rhs) -> int64_t {
+    return lhs + rhs;
   }
 };
 
-using Storage = VectorStorage<SumData>;
-using NodeReference = Storage::NodeReference;
-using SumWalker = Walker<NodeReference>;
-
-struct IotaBuilder {
-  template<class Walker>
-  void build(Walker walker) {
-    if (walker.size() == 1) {
-      walker.Get().sum = walker.left;
-      return;
-    }
-
-    build(walker.Left()), build(walker.Right());
-    walker.Update();
+TEST_CASE("Pure sumtree test") {
+  std::vector<int64_t> xs(10);
+  std::mt19937 rnd(239);
+  for (auto &x : xs) {
+    x = rnd();
   }
-};
 
-struct Getter {
-  int left, right;
-
-  template <class Walker>
-  int Get(Walker walker) {
-    if (walker.inside(left, right)) {
-      return walker.Get().sum;
+  auto stree = build<SumData>(xs);
+  for (int l = 0; l < 10; ++l) {
+    int64_t expected = xs[l];
+    for (int r = l + 1; r <= 10; ++r) {
+      REQUIRE(expected == stree.Fold(l, r));
+      if (r < 10) {
+        expected += xs[r];
+      }
     }
-    if (walker.disjoint(left, right)) {
-      return 0;
-    }
-
-    return Get(walker.Left()) + Get(walker.Right());
   }
-};
+}
 
-template<class ...Args>
-struct Combine : Args... {
-  using Args::operator()...;
-};
-
-template<class ...Args>
-Combine(Args...) -> Combine<Args...>;
-
-TEST_CASE("Sample test") {
-  auto stree = STree<Storage>(10);
-  IotaBuilder{}.build(stree.Root());
-
-  auto Get = Combine {
-    [](auto &&stree, int index) {
-      return Getter{index, index + 1}.Get(stree.Root());
-    },
-    [](auto &&stree, int begin, int end) {
-      return Getter{begin, end}.Get(stree.Root());
-    },
-  };
+TEST_CASE("Iota builder test") {
+  auto stree = build<SumData>(10, [](int index) {
+    return index;
+  });
 
   for (int i = 0; i < 10; ++i) {
-    REQUIRE(Get(stree, i) == i);
+    REQUIRE(stree.Fold(i, i+1) == i);
   }
 
   for (int l = 0; l < 10; ++l) {
-    int expected = 0;
-    for (int r = l; r <= 10; expected += r++) {
-      REQUIRE(expected == Get(stree, l, r));
+    int64_t expected = l;
+    for (int r = l + 1; r <= 10; expected += r++) {
+      REQUIRE(stree.Fold(l, r) == expected);
     }
   }
+}
+
+template <class T>
+struct AtLeastFinder {
+  T value;
+
+  template <class Walker>
+  int Find(Walker w) {
+    if (w.Get() < value) {
+      return -1;
+    }
+
+    if (w.size() == 1) {
+      return w.left;
+    }
+
+    int left = Find(w.Left());
+    if (left != -1) {
+      return left;
+    } else {
+      return Find(w.Right());
+    }
+  }
+};
+
+template <class T>
+struct Setter {
+  int index;
+  T value;
+
+  template <class Walker>
+  void set(Walker walker) {
+    if (walker.size() == 1) {
+      walker.Get() = Walker::Monoid::Pure(value);
+    } else {
+      set(index < walker.mid() ? walker.Left() : walker.Right());
+      walker.Update();
+    }
+  }
+};
+
+struct MaxData {
+  template <class T>
+  static auto Pure(T value) {
+    return value;
+  }
+
+  template <class T>
+  static auto Merge(T lhs, T rhs) {
+    return std::max(lhs, rhs);
+  }
+};
+
+TEST_CASE("Pure maxtree test") {
+  auto stree = build<MaxData>(std::vector<int>{1, 3, 2, 4, 6});
+  auto find = [&](int x) { return AtLeastFinder<int>{x}.Find(stree.Root()); };
+  auto set = [&](int i, int x) { Setter<int>{i, x}.set(stree.Root()); };
+  REQUIRE(find(2) == 1);
+  REQUIRE(find(5) == 4);
+  set(2, 5);
+  REQUIRE(find(4) == 2);
+  REQUIRE(find(8) == -1);
+  set(3, 7);
+  REQUIRE(find(6) == 3);
 }

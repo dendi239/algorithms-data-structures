@@ -24,16 +24,18 @@
 
 #include <vector>
 
-template <class NodeData>
+template <class MonoidType, class StoredType = decltype(MonoidType::Pure(int{}))>
 class VectorStorage {
  public:
-  using Data = NodeData;
+  using Data = StoredType;
+  using Monoid = MonoidType;
 
   VectorStorage() : storage(1) {}
 
   class NodeReference {
    public:
-    using Data = NodeData;
+    using Data = StoredType;
+    using Monoid = MonoidType;
 
     Data &Get();
 
@@ -58,7 +60,7 @@ class VectorStorage {
 
  private:
   struct Node {
-    NodeData data;
+    Data data;
     int left = -1, right = -1;
   };
 
@@ -76,21 +78,21 @@ class VectorStorage {
   std::vector<Node> storage;
 };
 
-template<class NodeData>
-auto VectorStorage<NodeData>::NodeReference::Get() -> Data & {
+template<class Monoid, class Stored>
+auto VectorStorage<Monoid, Stored>::NodeReference::Get() -> Data & {
   return storage->storage[index].data;
 }
 
-template<class NodeData>
-auto VectorStorage<NodeData>::NodeReference::Left() -> NodeReference {
+template<class Monoid, class Stored>
+auto VectorStorage<Monoid, Stored>::NodeReference::Left() -> NodeReference {
   return {
       storage,
       storage->Son(Node().left),
   };
 }
 
-template<class NodeData>
-auto VectorStorage<NodeData>::NodeReference::Right() -> NodeReference {
+template<class Monoid, class Stored>
+auto VectorStorage<Monoid, Stored>::NodeReference::Right() -> NodeReference {
   return {
       storage,
       storage->Son(Node().right),
