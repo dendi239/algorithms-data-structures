@@ -6,7 +6,7 @@ class Float {
  public:
   static double kPrecision;
 
-  Float(int value, int = 0) : value_(value) {}
+//  Float(int value, int = 0) : value_(value) {}
   Float(double value = 0, int = 0) : value_{value} {}
   explicit operator double() const { return value_; }
 
@@ -27,6 +27,9 @@ class Float {
   bool operator!=(const Float &rhs) const { return !(*this == rhs); }
 
  private:
+  friend istream &operator>>(istream &os, Float& value);
+  friend ostream &operator<<(ostream &os, const Float& value);
+
   double value_;
 };
 
@@ -37,6 +40,16 @@ Float operator-(const Float &lhs, const Float &rhs) { return Float(lhs) -= rhs; 
 Float operator*(const Float &lhs, const Float &rhs) { return Float(lhs) *= rhs; }
 Float operator/(const Float &lhs, const Float &rhs) { return Float(lhs) /= rhs; }
 
+Float operator""_f(unsigned long long value) {
+  return Float(value);
+}
+
 Float operator""_f(long double value) {
  return Float(value); 
 }
+
+ostream &operator<<(ostream &os, const Float& value)
+{ return os << static_cast<double>(value); }
+
+istream &operator>>(istream &is, Float& value)
+{ return is >> value.value_; }

@@ -25,12 +25,12 @@ Here we have some bunch of algorithms performing any kinda of traverses around o
 There're many of entities we wanna work as graph and don't wanna to modify them
 in order to achieve all profit present graph micro-library could provide.
 
-Hence, we need or graph to define somehow two types `NodeType` , `EdgeType` 
+Hence, we need or graph to define somehow two types `Vertex` , `EdgeType` 
 such that following functions are available:
 ```c++
 int NumberVertices(const Graph &graph);
-auto GetTarget(const Graph &graph, const EdgeType &edge) -> NodeType;
-auto OutgoingEdges(const Graph &graph, NodeType node) -> Edges;
+auto GetTarget(const Graph &graph, const EdgeType &edge) -> Vertex;
+auto OutgoingEdges(const Graph &graph, Vertex node) -> Edges;
 ```
 where `Edges` is iterable sequence of edges. Notice that we don't need to store it 
 on our own, but this might change, so it would be great for you to provide
@@ -40,7 +40,7 @@ Several algorithms might need to color nodes somehow. To maintain that we could
 use `array`, `vector`, or `unordered_set`. For now, `unordered_set` is used, but
 I need to provide extension point for user to provide desired data structure such
 as `std::vector` to reduce `unordered_set`'s overhead. But for now, there's no 
-such extension point, so we might need you to make `NodeType` hashable.
+such extension point, so we might need you to make `Vertex` hashable.
 
 ### Visitor
 

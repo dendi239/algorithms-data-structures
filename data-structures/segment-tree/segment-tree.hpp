@@ -25,11 +25,13 @@
 #include "node-storage.hpp"
 #include "walker.hpp"
 
-template<class Unary>
+namespace segment_tree {
+
+template <class Unary>
 struct Builder {
   Unary unary;
 
-  template<class Walker>
+  template <class Walker>
   void build(Walker walker) {
     if (walker.size() == 1) {
       walker.Get() = Walker::Monoid::Pure(unary(walker.left));
@@ -40,10 +42,10 @@ struct Builder {
   }
 };
 
-template<class Storage>
+template <class Storage>
 class STree {
  public:
-  explicit STree(int size) : begin_{0}, end_{size} {}
+  explicit STree(int size) : storage_(size), begin_{0}, end_{size} {}
 
   Walker<typename Storage::NodeReference> Root() {
     return Walker<typename Storage::NodeReference>{
@@ -52,15 +54,15 @@ class STree {
     };
   }
 
-  template<class Unary>
+  template <class Unary>
   void Build(Unary unary) {
     Builder<Unary>{unary}
-      .build(Root());
+        .build(Root());
   }
 
-  template<class T = typename Storage::Monoid>
-  auto Fold(int begin, int end) {
-    return RangeQuery<T>{begin, end}
+  template <class T = typename Storage::Monoid>
+  auto Fold(int begin, int end, T &&monoid = {}) {
+    return RangeQuery<T>{begin, end, std::forward<T>(monoid)}
         .perform(Root());
   }
 
@@ -69,9 +71,9 @@ class STree {
   int begin_, end_;
 };
 
-template<class Monoid>
+template <class Monoid>
 struct stree_builder {
-  template<class Unary>
+  template <class Unary>
   auto operator()(int size, Unary unary) {
     using NodeType = decltype(std::declval<Unary>()(0));
     using Storage = VectorStorage<Monoid, NodeType>;
@@ -81,7 +83,7 @@ struct stree_builder {
     return stree;
   }
 
-  template<class T>
+  template <class T>
   auto operator()(const std::vector<T> &xs) {
     int size = static_cast<int>(xs.size());
     return (*this)(size, [&](int index) {
@@ -90,5 +92,7 @@ struct stree_builder {
   }
 };
 
-template<class Monoid>
+template <class Monoid>
 stree_builder<Monoid> build;
+
+} // namespace segment_tree;

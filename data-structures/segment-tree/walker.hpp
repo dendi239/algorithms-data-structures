@@ -22,6 +22,21 @@
 
 #pragma once
 
+#include <functional>
+
+namespace segment_tree {
+
+struct Defer {
+  std::function<void()> func;
+
+  template <class Func>
+  Defer(Func func) : func(func) {}
+
+  ~Defer() noexcept {
+    func();
+  }
+};
+
 template <class NodeReference>
 class Walker {
  public:
@@ -53,32 +68,36 @@ class Walker {
   Data &Update() {
     return node.Get() = Monoid::Merge(Left().Get(), Right().Get());
   }
+
+  auto DeferredUpdate() {
+    return Defer{[this] { Update(); }};
+  }
 };
 
-template <class T>
+template <class Monoid>
 struct RangeQuery {
   int begin, end;
+  Monoid monoid;
 
   template <class Walker>
   auto perform(Walker walker) {
     if (walker.inside(begin, end)) {
-      return T::Pure(walker.Get());
+      return monoid.Pure(walker.Get());
     }
 
     auto left = walker.Left();
     auto right = walker.Right();
 
-    auto result = [&] {
-      if (left.disjoint(begin, end)) {
-        return perform(right);
-      }
-      if (right.disjoint(begin, end)) {
-        return perform(left);
-      }
-      return T::Merge(perform(left), perform(right));
-    }();
+    walker.DeferredUpdate();
 
-    walker.Update();
-    return result;
+    if (left.disjoint(begin, end)) {
+      return perform(right);
+    }
+    if (right.disjoint(begin, end)) {
+      return perform(left);
+    }
+    return monoid.Merge(perform(left), perform(right));
   }
 };
+
+} // namespace segment_tree

@@ -42,7 +42,7 @@ TEST_CASE("Pure sumtree test") {
     x = rnd();
   }
 
-  auto stree = build<SumData>(xs);
+  auto stree = segment_tree::build<SumData>(xs);
   for (int l = 0; l < 10; ++l) {
     int64_t expected = xs[l];
     for (int r = l + 1; r <= 10; ++r) {
@@ -55,7 +55,7 @@ TEST_CASE("Pure sumtree test") {
 }
 
 TEST_CASE("Iota builder test") {
-  auto stree = build<SumData>(10, [](int index) {
+  auto stree = segment_tree::build<SumData>(10, [](int index) {
     return index;
   });
 
@@ -123,7 +123,7 @@ struct MaxData {
 };
 
 TEST_CASE("Pure maxtree test") {
-  auto stree = build<MaxData>(std::vector<int>{1, 3, 2, 4, 6});
+  auto stree = segment_tree::build<MaxData>(std::vector<int>{1, 3, 2, 4, 6});
   auto find = [&](int x) { return AtLeastFinder<int>{x}.Find(stree.Root()); };
   auto set = [&](int i, int x) { Setter<int>{i, x}.set(stree.Root()); };
   REQUIRE(find(2) == 1);

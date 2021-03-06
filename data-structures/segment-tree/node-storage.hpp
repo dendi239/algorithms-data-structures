@@ -24,13 +24,15 @@
 
 #include <vector>
 
+namespace segment_tree {
+
 template <class MonoidType, class StoredType = decltype(MonoidType::Pure(int{}))>
 class VectorStorage {
  public:
   using Data = StoredType;
   using Monoid = MonoidType;
 
-  VectorStorage() : storage(1) {}
+  explicit VectorStorage(int /*size*/) : storage(1) {}
 
   class NodeReference {
    public:
@@ -98,3 +100,5 @@ auto VectorStorage<Monoid, Stored>::NodeReference::Right() -> NodeReference {
       storage->Son(Node().right),
   };
 }
+
+} // namespace segment_tree

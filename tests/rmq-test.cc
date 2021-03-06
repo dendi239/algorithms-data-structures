@@ -8,7 +8,7 @@
 //  copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
 //
-// The above copyright notice and this permission notice shall be included in
+// The above copyright notice and this permission notice shall be included in 
 // all copies or substantial portions of the Software.
 //
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
@@ -20,35 +20,39 @@
 // SOFTWARE.
 //
 
-#include <numeric>
-#include <vector>
+#define CATCH_CONFIG_MAIN
+#include <catch2/catch.hpp>
+#include "../data-structures/rmq.hpp"
 
-class Dsu {
- public:
-  explicit Dsu(size_t size) : parents_(size), ranks_(size) {
-    std::iota(parents_.begin(), parents_.end(), 0);
+template <class T>
+struct SimpleRmq {
+  std::vector<T> xs;
+
+  explicit SimpleRmq(const std::vector<T> &xs) : xs(xs) {}
+
+  T operator()(int begin, int end) const {
+    T res = xs[begin];
+    for (int i = begin + 1; i < end; ++i) {
+      res = std::min(res, xs[i]);
+    }
+    return res;
   }
-
-  int parent(int node) const {
-    return parents_[node] == node
-           ? node
-           : parents_[node] = parent(parents_[node]);
-  }
-
-  bool is_same(int first, int second) const {
-    return parent(first) == parent(second);
-  }
-
-  void merge(int first, int second) {
-    first = parent(first), second = parent(second);
-    if (first == second) return;
-    if (ranks_[first] < ranks_[second]) std::swap(first, second);
-
-    parents_[second] = first;
-    ranks_[first] += ranks_[first] == ranks_[second];
-  }
-
- private:
-  mutable std::vector<int> parents_;
-  std::vector<int> ranks_;
 };
+
+TEST_CASE("Sample test") {
+  auto vec = std::vector<int>{
+    1, 3, 2, 5, 0,
+  };
+
+  auto rmq1 = rmq::Rmq(vec);
+  auto rmq2 = rmq::Rmq(vec.begin(), vec.end());
+  auto expected_rmq = SimpleRmq(vec);
+
+  for (int i = 0; i < vec.size(); ++i) {
+    for (int j = i + 1; j <= vec.size(); ++j) {
+      auto expected = expected_rmq(i, j);
+      REQUIRE(rmq1.min(i, j) == expected);
+      REQUIRE(rmq2.min(i, j) == expected);
+    }
+  }
+}
