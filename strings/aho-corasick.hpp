@@ -6,223 +6,246 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <vector>
 
-#include <ranges/iterator_range.hpp>
-#include <graphs/bfs.hpp>
+#include "../ranges/iterator_range.hpp"
+#include "../graphs/bfs.hpp"
 
 namespace aho_corasick {
 
 class NodeReference;
 
-struct Node {
-  static const int kBadId = -1;
+struct AutomatonNode {
+  AutomatonNode() : suffix_link(nullptr), terminal_link(nullptr) {}
 
-  int suff_link = kBadId, filled_suff_link = kBadId;
-  std::vector<size_t> ids;
-
-  std::map<char, int> children;
-
-  auto At(char ch) const -> int;
+  // Stores ids of strings which are ended at this node.
+  std::vector<size_t> terminated_string_ids;
+  // Stores tree structure of nodes.
+  std::map<char, AutomatonNode> trie_transitions;
+  // Stores cached transitions of the automaton, contains
+  // only pointers to the elements of trie_transitions.
+  std::map<char, AutomatonNode *> automaton_transitions_cache;
+  AutomatonNode *suffix_link;
+  AutomatonNode *terminal_link;
 };
 
-struct BaseGraph {
-  static const int kRootId = 0;
+// Returns a corresponding trie transition 'nullptr' otherwise.
+AutomatonNode *GetTrieTransition(AutomatonNode *node, char character) {
+  if (auto it = node->trie_transitions.find(character);
+      it != node->trie_transitions.end()) {
+    return &it->second;
+  } else {
+    return nullptr;
+  }
+}
 
-  BaseGraph() : nodes_(1) {}
-  explicit BaseGraph(std::vector<Node> nodes) : nodes_{std::move(nodes)} {}
+// Returns an automaton transition, updates 'node->automaton_transitions_cache'
+// if necessary.
+// Provides constant amortized runtime.
+AutomatonNode *GetAutomatonTransition(AutomatonNode *node,
+                                      AutomatonNode *root,
+                                      char character) {
+  if (node == nullptr) {
+    return root;
+  }
 
-  std::vector<Node> nodes_;
+  if (auto trie_transition = GetTrieTransition(node, character)) {
+    return node->automaton_transitions_cache[character] = trie_transition;
+  }
 
-  auto Link(int node, char ch) const -> int
-  { return nodes_[node].At(ch); }
+  if (auto it = node->automaton_transitions_cache.find(character);
+      it != node->automaton_transitions_cache.end()) {
+    return it->second;
+  }
 
-  bool Contains(int node, char ch) const
-  { return nodes_[node].At(ch) != Node::kBadId; }
+  AutomatonNode *transition = GetAutomatonTransition(
+      node->suffix_link, root, character);
+  return node->automaton_transitions_cache[character] = transition;
+}
 
-  auto SuffLink(int node) const -> int
-  { return nodes_[node].suff_link; }
+namespace internal {
 
-  auto FilledSuffLink(int node) const -> int
-  { return nodes_[node].filled_suff_link; }
-
-  auto Ids(int node) const -> const std::vector<size_t> &
-  { return nodes_[node].ids; }
-};
-
-class Automaton : private BaseGraph {
+class AutomatonGraph {
  public:
-  NodeReference Root() const;
+  struct Edge {
+    Edge(AutomatonNode *source, AutomatonNode *target, char character)
+        : source(source), target(target), character(character) {}
+
+    AutomatonNode *source;
+    AutomatonNode *target;
+    char character;
+  };
+};
+
+std::vector<typename AutomatonGraph::Edge> OutgoingEdges(
+    const AutomatonGraph & /*graph*/, AutomatonNode *vertex) {
+  std::vector<typename AutomatonGraph::Edge> edges;
+  for (auto &[symbol, destination] : vertex->trie_transitions) {
+    edges.emplace_back(vertex, &destination, symbol);
+  }
+  return edges;
+}
+
+AutomatonNode *GetTarget(const AutomatonGraph & /*graph*/,
+                         const AutomatonGraph::Edge &edge) {
+  return edge.target;
+}
+
+class SuffixLinkCalculator
+    : public traverses::BfsVisitor<AutomatonNode *, AutomatonGraph::Edge> {
+ public:
+  explicit SuffixLinkCalculator(AutomatonNode *root) : root_(root) {}
+
+  void ExamineEdge(const AutomatonGraph::Edge &edge) override {
+    if (edge.source->suffix_link == nullptr) {
+      edge.target->suffix_link = root_;
+    } else {
+      edge.target->suffix_link = GetAutomatonTransition(
+          edge.source->suffix_link, root_, edge.character);
+    }
+  }
 
  private:
-  friend class NodeReference;
-  friend class AutomatonBuilder;
-
-  explicit Automaton(std::vector<Node> nodes) : BaseGraph(std::move(nodes)) {}
+  AutomatonNode *root_;
 };
 
-class AutomatonBuilder : private BaseGraph {
+class TerminalLinkCalculator
+    : public traverses::BfsVisitor<AutomatonNode *, AutomatonGraph::Edge> {
  public:
-  void Add(std::string_view pattern, size_t identifier);
-  auto Build() -> std::unique_ptr<Automaton>;
+  explicit TerminalLinkCalculator(AutomatonNode *root) : root_(root) {}
+
+  void DiscoverVertex(AutomatonNode *node) override {
+    if (node->suffix_link == nullptr) {
+      return;
+    }
+    if (node->suffix_link->terminated_string_ids.empty()) {
+      node->terminal_link = node->suffix_link->terminal_link;
+    } else {
+      node->terminal_link = node->suffix_link;
+    }
+  }
 
  private:
-  friend class AutomatonVisitor;
-
-  friend IteratorRange<std::map<char, int>::const_iterator> OutgoingEdges(
-      const AutomatonBuilder &, int);
-  friend int GetTarget(const AutomatonBuilder &, const std::pair<char, int> &);
-
-  int GetOrCreateLink(int node, char ch);
+  AutomatonNode *root_;
 };
+
+} // namespace internal
 
 class NodeReference {
  public:
-  auto Avaliable() const -> std::vector<char>;
-  auto Next(char symbol) const -> NodeReference;
+  NodeReference() : node_(nullptr), root_(nullptr) {}
 
-  bool operator==(const NodeReference &rhs) const;
+  NodeReference(AutomatonNode *node, AutomatonNode *root)
+      : node_(node), root_(root) {}
+
+  NodeReference Next(char character) const {
+    return NodeReference{
+      GetAutomatonTransition(node_, root_, character),
+      root_,
+    };
+  }
 
   template <class Callback>
-  void GenerateMatches(Callback callback) const;
-
- private:
-  friend class Automaton;
-  friend class std::hash<NodeReference>;
-
-  NodeReference(int node, const Automaton &automaton)
-      : node_{node}, automaton_{&automaton}
-  {}
-
-  int node_;
-  const Automaton *automaton_;
-};
-
-}  // namespace aho_corasick
-
-namespace std {
-
-template <>
-struct hash<aho_corasick::NodeReference> {
-  size_t operator()(const aho_corasick::NodeReference &reference) const noexcept {
-    return reference.node_;
-  }
-};
-
-}  // namespace std
-
-namespace aho_corasick {
-
-using NodeType = int;
-using EdgeType = std::pair<char, int>;
-
-int GetTarget(const AutomatonBuilder &/*graph*/, const EdgeType &edge) {
-  return edge.second;
-}
-
-IteratorRange<std::map<char, int>::const_iterator> OutgoingEdges(
-    const AutomatonBuilder &graph, int node) {
-  auto &links = graph.nodes_[node].children;
-  return IteratorRange(links.begin(), links.end());
-}
-
-class AutomatonVisitor : public traverses::BfsVisitor<NodeType, EdgeType> {
- public:
-  AutomatonVisitor(AutomatonBuilder *graph, int node)
-      : graph_{graph}, node_{node}
-  {}
-
-  virtual void ExamineVertex(int vertex) override {
-    node_ = vertex;
-  }
-
-  virtual void ExamineEdge(const EdgeType &edge) override {
-    auto [ch, link] = edge;
-
-    auto &suff_link = graph_->nodes_[link].suff_link;
-    auto &filled_suff_link = graph_->nodes_[link].filled_suff_link;
-
-    for (auto node = graph_->SuffLink(node_); node != Node::kBadId;
-         node = graph_->SuffLink(node)) {
-      if (!graph_->Contains(node, ch)) continue;
-      suff_link = graph_->Link(node, ch);
-      break;
+  void GenerateMatches(Callback on_match) const {
+    for (NodeReference node = *this; node; node = node.TerminalLink()) {
+      for (auto terminated_id : node.TerminatedStringIds()) {
+        on_match(terminated_id);
+      }
     }
+  }
 
-    if (suff_link == Node::kBadId) suff_link = AutomatonBuilder::kRootId;
+  bool IsTerminal() const {
+    return !node_->terminated_string_ids.empty();
+  }
 
-    filled_suff_link = graph_->Ids(suff_link).empty()
-                       ? graph_->nodes_[suff_link].filled_suff_link
-                       : suff_link;
+  explicit operator bool() const { return node_ != nullptr; }
+
+  bool operator==(NodeReference other) const {
+    return node_ == other.node_ && root_ == other.root_;
   }
 
  private:
-  AutomatonBuilder *graph_;
-  int node_ = AutomatonBuilder::kRootId;
+  using TerminatedStringIterator = std::vector<size_t>::const_iterator;
+  using TerminatedStringIteratorRange = IteratorRange<TerminatedStringIterator>;
+
+  NodeReference TerminalLink() const {
+    return NodeReference{node_->terminal_link, root_};
+  }
+
+  TerminatedStringIteratorRange TerminatedStringIds() const {
+    return IteratorRange(node_->terminated_string_ids);
+  }
+
+  AutomatonNode *node_;
+  AutomatonNode *root_;
 };
 
-std::unique_ptr<Automaton> AutomatonBuilder::Build() {
-  auto visitor = AutomatonVisitor{this, kRootId};
-  traverses::BreadthFirstSearch(kRootId, *this, visitor);
+class AutomatonBuilder;
 
-  auto nodes = std::move(nodes_);
-  nodes_ = {Node()};
+class Automaton {
+ public:
+  Automaton() = default;
 
-  return std::unique_ptr<Automaton>(new Automaton(std::move(nodes)));
-}
+  Automaton(const Automaton &) = delete;
+  Automaton &operator=(const Automaton &) = delete;
 
-NodeReference Automaton::Root() const {
-  return NodeReference(kRootId, *this);
-}
-
-int AutomatonBuilder::GetOrCreateLink(int node, char ch) {
-  if (nodes_[node].At(ch) == Node::kBadId) {
-    nodes_.push_back(Node());
-    int last_id = static_cast<int>(nodes_.size()) - 1;
-    nodes_[node].children[ch] = last_id;
+  NodeReference Root() {
+    return NodeReference(&root_, &root_);
   }
 
-  return nodes_[node].At(ch);
-}
+ private:
+  AutomatonNode root_;
 
-void AutomatonBuilder::Add(std::string_view pattern, size_t identifier) {
-  int node = kRootId;
-  for (auto ch : pattern) {
-    node = GetOrCreateLink(node, ch);
-  }
-  nodes_[node].ids.push_back(identifier);
-}
+  friend class AutomatonBuilder;
+};
 
-auto Node::At(char ch) const -> int {
-  if (children.count(ch)) {
-    return children.at(ch);
-  } else {
-    return kBadId;
-  }
-}
-
-bool NodeReference::operator==(const NodeReference &rhs) const {
-  return std::tie(node_, automaton_) == std::tie(rhs.node_, rhs.automaton_);
-}
-
-template <class Callback>
-void NodeReference::GenerateMatches(Callback callback) const {
-  for (int node = node_; node != Node::kBadId;
-       node = automaton_->FilledSuffLink(node)) {
-    for (auto id : automaton_->Ids(node)) callback(id);
-  }
-}
-
-auto NodeReference::Next(char symbol) const -> NodeReference {
-  int node = node_;
-
-  while (!automaton_->Contains(node, symbol) && node != Automaton::kRootId) {
-    node = automaton_->SuffLink(node);
-  }
-  if (automaton_->Contains(node, symbol)) {
-    node = automaton_->Link(node, symbol);
+class AutomatonBuilder {
+ public:
+  void Add(const std::string &string, size_t id) {
+    words_.push_back(string);
+    ids_.push_back(id);
   }
 
-  return NodeReference(node, *automaton_);
-}
+  std::unique_ptr<Automaton> Build() {
+    auto automaton = std::make_unique<Automaton>();
+    BuildTrie(words_, ids_, automaton.get());
+    BuildSuffixLinks(automaton.get());
+    BuildTerminalLinks(automaton.get());
+    return automaton;
+  }
+
+ private:
+  static void BuildTrie(const std::vector<std::string> &words,
+                        const std::vector<size_t> &ids, Automaton *automaton) {
+    for (size_t i = 0; i < words.size(); ++i) {
+      AddString(&automaton->root_, ids[i], words[i]);
+    }
+  }
+
+  static void AddString(AutomatonNode *root, size_t string_id,
+                        const std::string &string) {
+    AutomatonNode *current = root;
+    for (char character : string) {
+      // use implicit ctor if necessary
+      current = &current->trie_transitions[character];
+    }
+    current->terminated_string_ids.push_back(string_id);
+  }
+
+  static void BuildSuffixLinks(Automaton *automaton) {
+    traverses::BreadthFirstSearch(
+        &automaton->root_, internal::AutomatonGraph{},
+        internal::SuffixLinkCalculator(&automaton->root_));
+  }
+
+  static void BuildTerminalLinks(Automaton *automaton) {
+    traverses::BreadthFirstSearch(
+        &automaton->root_, internal::AutomatonGraph{},
+        internal::TerminalLinkCalculator(&automaton->root_));
+  }
+
+  std::vector<std::string> words_;
+  std::vector<size_t> ids_;
+};
 
 }  // namespace aho_corasick
