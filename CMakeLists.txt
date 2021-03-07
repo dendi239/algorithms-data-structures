@@ -22,8 +22,13 @@ add_executable(bfs-test
         graphs/bfs.hpp
         tests/bfs-test.cc)
 
+add_executable(aho-corasik-test
+        strings/aho-corasick.hpp
+        tests/aho-corasik-test.cc)
+
 enable_testing()
 add_test(modular modular-test)
 add_test(stree stree-test)
 add_test(rmq rmq-test)
 add_test(bfs bfs-test)
+add_test(aho-corasik aho-corasik-test)
