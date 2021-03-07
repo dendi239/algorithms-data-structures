@@ -4,7 +4,6 @@ project(algorithms_data_structures)
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(Catch2 REQUIRED)
-link_libraries(Catch2::Catch2)
 
 add_executable(modular-test
         algebra/modular.hpp
@@ -25,6 +24,10 @@ add_executable(bfs-test
 add_executable(aho-corasik-test
         strings/aho-corasick.hpp
         tests/aho-corasik-test.cc)
+
+target_link_libraries(rmq-test Catch2::Catch2WithMain)
+target_link_libraries(stree-test Catch2::Catch2WithMain)
+target_link_libraries(modular-test Catch2::Catch2WithMain)
 
 enable_testing()
 add_test(modular modular-test)
