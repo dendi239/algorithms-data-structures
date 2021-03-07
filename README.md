@@ -1,3 +1,7 @@
+# Algorithms and Data Structures
+
+[![CMake](https://github.com/dendi239/algorithms-data-structures/actions/workflows/tests.yml/badge.svg)](https://github.com/dendi239/algorithms-data-structures/actions/workflows/tests.yml)
+
 This is a library of algorithms and data structures frequently used in 
 different competitive programming problems. It follows DRY principle 
 to reduce the amount of time spent on writing already known solutions 
