@@ -9,22 +9,21 @@ namespace traverses {
 template <class Graph, class Visitor, class NodeType>
 void DepthFirstSearch(const Graph &graph, Visitor visitor, NodeType start);
 
-template<class Graph, class Visitor, class It>
+template <class Graph, class Visitor, class It>
 void DepthFirstSearch(const Graph &graph, It begin, It end, Visitor visitor);
 
-template<class Graph, class Visitor>
+template <class Graph, class Visitor>
 void DepthFirstSearch(const Graph &graph, Visitor visitor);
 
 namespace detail {
 
-template<class Graph, class Visitor>
+template <class Graph, class Visitor>
 class Dfs {
  public:
   explicit Dfs(const Graph &graph, Visitor visitor)
-      : graph_{graph}
-      , statuses_(NumberVertices(graph))
-      , visitor_{std::move(visitor)}
-  {}
+      : graph_{graph},
+        statuses_(NumberVertices(graph)),
+        visitor_{std::move(visitor)} {}
 
   void Visit(int start) {
     std::stack<int> nodes;
@@ -56,7 +55,7 @@ class Dfs {
     }
   }
 
-  template<class It>
+  template <class It>
   void PerformTraverse(It begin, It end) {
     for (auto it = begin; it != end; ++it) {
       auto node = *it;
@@ -84,20 +83,23 @@ class Dfs {
 template <class Graph, class Visitor, class NodeType>
 void DepthFirstSearch(const Graph &graph, Visitor visitor, NodeType start) {
   detail::Dfs<Graph, Visitor>{graph, std::move(visitor)}
-    .Visit(start);
+      .Visit(start);
 }
 
-template<class Graph, class Visitor, class It>
+template <class Graph, class Visitor, class It>
 void DepthFirstSearch(const Graph &graph, It begin, It end, Visitor visitor) {
   detail::Dfs<Graph, Visitor>{graph, std::move(visitor)}
       .PerformTraverse(begin, end);
 }
 
-template<class Graph, class Visitor>
+template <class Graph, class Visitor>
 void DepthFirstSearch(const Graph &graph, Visitor visitor) {
   std::vector<int> standard_order(graph.size());
   std::iota(standard_order.begin(), standard_order.end(), 0);
-  return DepthFirstSearch(graph, standard_order.begin(), standard_order.end(), visitor);
+  return DepthFirstSearch(graph,
+                          standard_order.begin(),
+                          standard_order.end(),
+                          visitor);
 }
 
 }  // namespace traverses

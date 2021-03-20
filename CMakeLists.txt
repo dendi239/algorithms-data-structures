@@ -4,34 +4,26 @@ project(algorithms_data_structures)
 set(CMAKE_CXX_STANDARD 17)
 
 find_package(Catch2 REQUIRED)
+enable_testing()
 
-add_executable(modular-test
-        algebra/modular.hpp
-        tests/modular-test.cc)
-add_executable(stree-test
+function(add_catch name)
+    add_executable("${name}-test" ${ARGN})
+    target_link_libraries("${name}-test" Catch2::Catch2WithMain)
+    add_test("${name}" "${name}-test")
+endfunction()
+
+function(add_catch_main name)
+    add_catch(${name} ${ARGN})
+    target_link_libraries("${name}-test" Catch2::Catch2WithMain)
+endfunction()
+
+add_catch_main(modular algebra/modular.hpp tests/modular-test.cc)
+add_catch_main(rmq data-structures/rmq.hpp tests/rmq-test.cc)
+add_catch_main(stree
         data-structures/segment-tree/segment-tree.hpp
         data-structures/segment-tree/node-storage.hpp
         data-structures/segment-tree/walker.hpp
         tests/stree-test.cc)
-add_executable(rmq-test
-        data-structures/rmq.hpp
-        tests/rmq-test.cc)
 
-add_executable(bfs-test
-        graphs/bfs.hpp
-        tests/bfs-test.cc)
-
-add_executable(aho-corasik-test
-        strings/aho-corasick.hpp
-        tests/aho-corasik-test.cc)
-
-target_link_libraries(rmq-test Catch2::Catch2WithMain)
-target_link_libraries(stree-test Catch2::Catch2WithMain)
-target_link_libraries(modular-test Catch2::Catch2WithMain)
-
-enable_testing()
-add_test(modular modular-test)
-add_test(stree stree-test)
-add_test(rmq rmq-test)
-add_test(bfs bfs-test)
-add_test(aho-corasik aho-corasik-test)
+add_catch(bfs graphs/bfs.hpp tests/bfs-test.cc)
+add_catch(aho-corasik strings/aho-corasick.hpp tests/aho-corasik-test.cc)

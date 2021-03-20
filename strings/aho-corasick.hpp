@@ -18,12 +18,9 @@ class NodeReference;
 struct AutomatonNode {
   AutomatonNode() : suffix_link(nullptr), terminal_link(nullptr) {}
 
-  // Stores ids of strings which are ended at this node.
   std::vector<size_t> terminated_string_ids;
-  // Stores tree structure of nodes.
   std::map<char, AutomatonNode> trie_transitions;
-  // Stores cached transitions of the automaton, contains
-  // only pointers to the elements of trie_transitions.
+
   std::map<char, AutomatonNode *> automaton_transitions_cache;
   AutomatonNode *suffix_link;
   AutomatonNode *terminal_link;
@@ -34,14 +31,10 @@ AutomatonNode *GetTrieTransition(AutomatonNode *node, char character) {
   if (auto it = node->trie_transitions.find(character);
       it != node->trie_transitions.end()) {
     return &it->second;
-  } else {
-    return nullptr;
   }
+  return nullptr;
 }
 
-// Returns an automaton transition, updates 'node->automaton_transitions_cache'
-// if necessary.
-// Provides constant amortized runtime.
 AutomatonNode *GetAutomatonTransition(AutomatonNode *node,
                                       AutomatonNode *root,
                                       char character) {

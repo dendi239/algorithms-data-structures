@@ -16,14 +16,6 @@ class BfsVisitor {
 
 template <class Vertex, class Graph, class Visitor>
 void BreadthFirstSearch(Vertex origin_vertex, const Graph &graph,
-                        Visitor visitor);
-
-}  // namespace traverses
-
-namespace traverses {
-
-template <class Vertex, class Graph, class Visitor>
-void BreadthFirstSearch(Vertex origin_vertex, const Graph &graph,
                         Visitor visitor) {
   std::unordered_set<Vertex> discovered_nodes;
   std::queue<Vertex> queue;
