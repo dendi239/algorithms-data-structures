@@ -14,6 +14,7 @@ void TestAhoCorasick();
 
 int main() {
     TestAhoCorasick();
+    std::cerr << "Aho-corasik tests passed!" << std::endl;
 }
 
 // ===== TESTING ZONE =====

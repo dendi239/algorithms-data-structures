@@ -8,7 +8,6 @@ enable_testing()
 
 function(add_catch name)
     add_executable("${name}-test" ${ARGN})
-    target_link_libraries("${name}-test" Catch2::Catch2WithMain)
     add_test("${name}" "${name}-test")
 endfunction()
 
