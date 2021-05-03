@@ -1,25 +1,3 @@
-//
-// Copyright (c) 2020 Denys Smirnov
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//  copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in
-// all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-//
-
 #pragma once
 
 #include <algorithm>
@@ -33,28 +11,31 @@ class Rmq {
  public:
   template <class It>
   Rmq(It begin, It end, Less less = {})
-      : data_(std::distance(begin, end)),
+      : data_(1),
         logs_(std::distance(begin, end) + 1),
         less_{less} {
     int len = std::distance(begin, end);
 
     for (int i = 0; i < len; ++i) {
-      data_[i].push_back(*(begin + i));
+      data_[0].push_back(*(begin + i));
     }
 
     for (int exp = 1, half = 1; (1 << exp) < (len << 1); ++exp, half <<= 1) {
       for (int diff = half; diff < (half << 1) && diff <= len; ++diff) {
         logs_[diff] = exp - 1;
       }
+      int old = exp - 1;
+      data_.emplace_back(len);
+
       for (int index = 0; index < len; ++index) {
         if (index + half < len) {
           auto new_value = std::min(
-              data_[index].back(),
-              data_[index + half].back(),
+              data_[old][index],
+              data_[old][index + half],
               less_);
-          data_[index].push_back(new_value);
+          data_[exp][index] = new_value;
         } else {
-          data_[index].push_back(data_[index].back());
+          data_[exp][index] = data_[old][index];
         }
       }
     }
@@ -62,12 +43,11 @@ class Rmq {
 
   template <class Container>
   Rmq(const Container &container, Less less = {})
-      : Rmq(container.begin(), container.end(), less)
-  {}
+      : Rmq(container.begin(), container.end(), less) {}
 
   T min(size_t begin, size_t end) const {
     auto log = logs_[end - begin];
-    auto lhs = data_[begin][log], rhs = data_[end - (1 << log)][log];
+    auto lhs = data_[log][begin], rhs = data_[log][end - (1 << log)];
     return std::min(lhs, rhs, less_);
   }
 
@@ -94,10 +74,11 @@ using container_value_t = iterator_value_t<decltype(std::declval<Container>().be
 
 template <class It, class Less = std::less<detail::iterator_value_t<It>>>
 Rmq(It begin, It end, Less less = {})
-  -> Rmq<detail::iterator_value_t<It>, Less>;
+-> Rmq<detail::iterator_value_t<It>, Less>;
 
-template <class Container, class Less = std::less<detail::container_value_t<Container>>>
+template <class Container, class Less = std::less<detail::container_value_t<
+    Container>>>
 Rmq(const Container &container, Less less = {})
-  -> Rmq<detail::container_value_t<Container>, Less>;
+-> Rmq<detail::container_value_t<Container>, Less>;
 
 } // namespace rmq

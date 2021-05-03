@@ -1,11 +1,12 @@
 #include <catch2/catch_all.hpp>
-#include "../data-structures/rmq.hpp"
+#include <utility>
+#include <data-structures/rmq.hpp>
 
 template <class T>
 struct SimpleRmq {
   std::vector<T> xs;
 
-  explicit SimpleRmq(const std::vector<T> &xs) : xs(xs) {}
+  explicit SimpleRmq(std::vector<T> xs) : xs(std::move(xs)) {}
 
   T operator()(int begin, int end) const {
     T res = xs[begin];
