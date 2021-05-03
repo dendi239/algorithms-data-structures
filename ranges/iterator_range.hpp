@@ -13,8 +13,8 @@ class IteratorRange {
   explicit IteratorRange(Container &container)
       : begin_{std::begin(container)}, end_(std::end(container)) {}
 
-  auto begin() const { return begin_; }
-  auto end() const { return end_; }
+  auto begin() const { return begin_; }  // NOLINT
+  auto end() const { return end_; }  // NOLINT
 
  private:
   Iterator begin_, end_;
