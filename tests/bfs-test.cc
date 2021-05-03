@@ -3,8 +3,9 @@
 #include <sstream>
 #include <vector>
 
-#include "../ranges/iterator_range.hpp"
-#include "../graphs/bfs.hpp"
+#include <ranges/iterator_range.hpp>
+#include <graphs/bfs.hpp>
+#include <graphs/flat-graph.hpp>
 
 void TestBfsHalt();
 void TestBfsOrder();

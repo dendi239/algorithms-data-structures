@@ -1,7 +1,8 @@
 #pragma once
 
 #include <queue>
-#include <unordered_set>
+
+#include <graphs/vertex-property-map.hpp>
 
 namespace traverses {
 
@@ -14,15 +15,20 @@ class BfsVisitor {
   virtual ~BfsVisitor() = default;
 };
 
-template <class Vertex, class Graph, class Visitor>
+template <class Graph, class Visitor,
+    class Vertex = typename graphs::GraphTraits<Graph>::Node>
 void BreadthFirstSearch(Vertex origin_vertex, const Graph &graph,
                         Visitor visitor) {
-  std::unordered_set<Vertex> discovered_nodes;
+  enum class Status {
+    NEW, LOOKED,
+  };
+
+  graphs::VertexPropertyMap<Graph, Status> discovered_nodes(graph);
   std::queue<Vertex> queue;
 
   auto discover = [&discovered_nodes, &queue, &visitor](Vertex node) {
-    if (discovered_nodes.count(node)) return;
-    discovered_nodes.insert(node);
+    if (discovered_nodes[node] == Status::LOOKED) return;
+    discovered_nodes[node] = Status::LOOKED;
     queue.push(node);
     visitor.DiscoverVertex(node);
   };
