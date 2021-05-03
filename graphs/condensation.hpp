@@ -17,15 +17,26 @@ struct Condensation {
   Partition components;
 };
 
-template<class Graph>
-auto BuildCondensation(const Graph &graph) -> Condensation;
-
 namespace detail {
 
-auto ReversedGraph(const Graph &graph) -> Graph;
+template <class Graph>
+auto DfsExitOrder(const Graph &graph) -> std::vector<int> {
+  std::vector<int> order;
+  traverses::DepthFirstSearch(graph, traverses::Visitor()
+      .OnFinish([&order](int node) { order.push_back(node); }));
+  std::reverse(order.begin(), order.end());
+  return order;
+}
 
-template<class Graph>
-auto DfsExitOrder(const Graph &graph) -> std::vector<int>;
+auto ReversedGraph(const Graph &graph) -> Graph {
+  auto reversed_graph = Graph(graph.size());
+  for (size_t node = 0; node < reversed_graph.size(); ++node) {
+    for (auto link : OutgoingEdges(graph, node)) {
+      Connect(&reversed_graph, link, node);
+    }
+  }
+  return reversed_graph;
+}
 
 }  // namespace detail
 
@@ -35,10 +46,9 @@ auto BuildCondensation(const Graph &graph) -> Condensation {
   auto reversed_graph = detail::ReversedGraph(graph);
 
   auto partition_builder = PartitionBuilder(graph.size());
-  traverses::LambdaVisitor()
-      .OnStart([&](int) { partition_builder.CreateNewGroup(); })
-      .OnFinish([&](int node) { partition_builder.AddElementToLastGroup(node); })
-      .Visit(reversed_graph, order);
+  traverses::DepthFirstSearch(reversed_graph, order, traverses::Visitor()
+      .OnStart([&partition_builder](int) { partition_builder.CreateNewGroup(); })
+      .OnFinish([&partition_builder](int node) { partition_builder.AddElementToLastGroup(node); }));
 
   auto partition = partition_builder.Build();
 
@@ -64,29 +74,5 @@ auto BuildCondensation(const Graph &graph) -> Condensation {
 
   return {condensation, partition};
 }
-
-namespace detail {
-
-template <class Graph>
-auto DfsExitOrder(const Graph &graph) -> std::vector<int> {
-  std::vector<int> order;
-  traverses::LambdaVisitor()
-      .OnFinish([&order](int node) { order.push_back(node); })
-      .Visit(graph);
-  std::reverse(order.begin(), order.end());
-  return order;
-}
-
-auto ReversedGraph(const Graph &graph) -> Graph {
-  auto reversed_graph = Graph(graph.size());
-  for (size_t node = 0; node < reversed_graph.size(); ++node) {
-    for (auto link : OutgoingEdges(graph, node)) {
-      Connect(&reversed_graph, link, node);
-    }
-  }
-  return reversed_graph;
-}
-
-}  // namespace detail
 
 }  // namespace condensation

@@ -45,7 +45,7 @@ such extension point, so we might need you to make `Vertex` hashable.
 ### Visitor
 
 In order to give full access to algorithm without force them to rewrite them ad-hoc, 
-we use visitor-pattern. For now, there're `LambdaVisitor` and `BfsVisitor` with 
+we use visitor-pattern. For now, there're `Visitor` and `BfsVisitor` with 
 different events applicable for both of algorithms. 
 
 Note that `Visitor` might be copied inside algorithm, so it's better to make it 

@@ -6,15 +6,6 @@
 
 namespace traverses {
 
-template <class Graph, class Visitor, class NodeType>
-void DepthFirstSearch(const Graph &graph, Visitor visitor, NodeType start);
-
-template <class Graph, class Visitor, class It>
-void DepthFirstSearch(const Graph &graph, It begin, It end, Visitor visitor);
-
-template <class Graph, class Visitor>
-void DepthFirstSearch(const Graph &graph, Visitor visitor);
-
 namespace detail {
 
 template <class Graph, class Visitor>
@@ -81,7 +72,7 @@ class Dfs {
 }  // namespace detail
 
 template <class Graph, class Visitor, class NodeType>
-void DepthFirstSearch(const Graph &graph, Visitor visitor, NodeType start) {
+void DepthFirstSearch(const Graph &graph, NodeType start, Visitor visitor) {
   detail::Dfs<Graph, Visitor>{graph, std::move(visitor)}
       .Visit(start);
 }
